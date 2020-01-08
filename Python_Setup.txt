@@ -1,0 +1,27 @@
+Installing python on windows 10:
+https://www.python.org/downloads/
+
+	Python 3.6.1 details:
+	https://www.python.org/downloads/release/python-361/
+
+		Direct download link:	
+		https://www.python.org/ftp/python/3.6.1/python-3.6.1-amd64.exe		
+
+		- Checkmark Add to PATH when installing
+
+Installing openpyxl
+	cd <python_install_dir>
+	Open cmd prompt
+	pip install openpyxl
+
+	#More details here:
+	https://openpyxl.readthedocs.io/en/stable/
+	
+
+Download PyCharm for editing Python code: 
+	https://www.jetbrains.com/pycharm/download/#section=windows
+	
+	Direct download link:
+	https://www.jetbrains.com/pycharm/download/download-thanks.html?platform=windows&code=PCC
+	
+
