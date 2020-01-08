@@ -2322,6 +2322,7 @@ class MigrateExcel:
 
 
 def main():
+    #Get input file from user using Exporer
     validFile = False
     while not validFile:
         filename = askopenfilename()
