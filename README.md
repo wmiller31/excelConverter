@@ -1,9 +1,11 @@
-# excelConverter
+## Python Version ##
+3.6.1
 
--- Expects Python version 3.6.1 -- 
+## Usage ##
+	Open powershell window (Shift+RightClick in explorer window)
+	python.exe excelConverter.py
 
-
--- Known limitations -- 
+## Known limitations ##
 
 - Beginning
 	- Formulas arent complete
