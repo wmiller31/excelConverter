@@ -129,6 +129,10 @@ class MigrateExcel:
         self.unknownInputSheetNames = list()
         self.migrationFailedSheets = list()
 
+        zprint("################################")
+        zprint("#   STARTING SHEET MIGRATION   #")
+        zprint("################################\n")
+
         #Kick off all sheet conversions one by one
         for iwbSheetName in self.iwb.sheetnames:
             #Get actual sheet name from input sheet name
@@ -150,45 +154,60 @@ class MigrateExcel:
             migrationStatus = 0
 
             if owbSheetName == "Beginning":
+                zprint("#Migrating Beginning")
                 migrationStatus = self.migrateBeginning(iwbSheetName, owbSheetName)
 
             elif owbSheetName == "Beginning Detail":
+                zprint("#Migrating Beginning Detail")
                 migrationStatus = self.migrateBeginningDetail(iwbSheetName, owbSheetName)
 
             elif owbSheetName == "Additional":
+                zprint("#Migrating Beginning Detail")
                 migrationStatus = self.migrateAdditional(iwbSheetName, owbSheetName)
 
             elif owbSheetName == "Sch A":
+                zprint("#Migrating Schedule A")
                 migrationStatus = self.migrateSchA(iwbSheetName, owbSheetName)
 
             elif owbSheetName == "Sch B":
+                zprint("#Migrating Schedule B")
                 #Custom migration, Create output sheets B and E
                 migrationStatus = self.migrateSchB(iwbSheetName, owbSheetName)
+
+                zprint("#Migrating Schedule E")
                 migrationStatus = self.migrateSchB_E(iwbSheetName, "Sch E")
 
 
             elif owbSheetName == "Sch C":
+                zprint("#Migrating Schedule C")
                 migrationStatus = self.migrateSchC(iwbSheetName, owbSheetName)
 
             elif owbSheetName == "Sch D":
+                zprint("#Migrating Schedule D")
                 migrationStatus = self.migrateSchD(iwbSheetName, owbSheetName)
 
             elif owbSheetName == "Sch F":
+                zprint("#Migrating Schedule F")
                 migrationStatus = self.migrateSchF(iwbSheetName, owbSheetName)
 
             elif owbSheetName == "Sch G":
+                zprint("#Migrating Schedule G")
                 migrationStatus = self.migrateSchG(iwbSheetName, owbSheetName)
 
             elif owbSheetName == "Sch H":
+                zprint("#Migrating Schedule H")
                 migrationStatus = self.migrateSchH(iwbSheetName, owbSheetName)
 
             elif owbSheetName == "Sch H Detail":
+                zprint("#Migrating Schedule H Detail")
                 migrationStatus = self.migrateSchHDetail(iwbSheetName, owbSheetName)
 
             elif owbSheetName == "Market Value":
+                zprint("#Migrating Market Value")
                 migrationStatus = self.migrateMarketValue(iwbSheetName, owbSheetName)
 
             elif owbSheetName == "Liability":
+                zprint("#Migrating Liability")
                 migrationStatus = self.migrateLiability(iwbSheetName, owbSheetName)
 
             else:
@@ -202,6 +221,10 @@ class MigrateExcel:
 
         #Create summary page details
         self.createSummaryPage()
+
+        zprint("########################################")
+        zprint("#   FINSHED STARTING SHEET MIGRATION   #")
+        zprint("########################################\n")
 
         #Check if any input sheets were unknown
         if len(self.unknownInputSheetNames) > 0:
@@ -335,6 +358,16 @@ class MigrateExcel:
                 currSheet.column_dimensions["E"].width = 28
                 currSheet.column_dimensions["F"].width = 8
                 currSheet.column_dimensions["G"].width = 16
+
+            if sheetName == "Sch G":
+                currSheet.column_dimensions["A"].width = COLUMN_WIDTH__EMPTY_ROW
+                currSheet.column_dimensions["B"].width = COLUMN_WIDTH__EMPTY_ROW
+                currSheet.column_dimensions["C"].width = 16
+                currSheet.column_dimensions["D"].width = COLUMN_WIDTH__DATE
+                currSheet.column_dimensions["E"].width = 24
+                currSheet.column_dimensions["F"].width = 8
+                currSheet.column_dimensions["G"].width = 14
+                currSheet.column_dimensions["H"].width = 14
 
             if sheetName == "Sch H":
                 currSheet["A5"].alignment = ALIGNMENT__HORIZONAL_LEFT
@@ -697,17 +730,27 @@ class MigrateExcel:
         #Create first entry in list as title header row for ease of total calculations
         listOfTotalRows.append((headerRowNum, "START"))
 
+        priorCellValue = ""
         for col in owbCurrSheet.iter_cols(min_col=colNumber, max_col=colNumber):
             for cell in col:
                 if cell.value is None:
+                    priorCellValue = ""
                     continue
 
+                #Find all rows that start with total
                 if cell.value.lower().startswith("total"):
-                    #zprint("Found sub-total row: ", cell)
-                    title = cell.value
-                    rowNum = cell.row
-                    #zprint("  Total: %s -- row Number: %d" % (title, rowNum))
-                    listOfTotalRows.append((rowNum, title))
+                    #Make sure prior row didnt have total in it as well.
+                    #  If it did, the actual name of this section starts with total
+                    if not priorCellValue.lower().startswith("total"):
+                        #zprint("Found sub-total row: ", cell)
+                        title = cell.value
+                        rowNum = cell.row
+                        #zprint("  Total: %s -- row Number: %d" % (title, rowNum))
+                        listOfTotalRows.append((rowNum, title))
+                    else:
+                        print_debug("Skipping title %s because its not actually a total row." % (cell.value))
+
+                priorCellValue = cell.value
 
         print_debug("  Found %d sub-total rows" % (len(listOfTotalRows)))
 
@@ -987,8 +1030,9 @@ class MigrateExcel:
         self.migratePageTitle(iwbSheetName, owbSheetName, titleColWidth="E")
 
         #Check if page is empty -- if so, create empty formatted page
-        if iwbCurrSheet.max_row == 5:
-            zprint("  Additional page is empty. Creating empty sheet.")
+        rowThresholdToBeEmpty = 7
+        if iwbCurrSheet.max_row < rowThresholdToBeEmpty:
+            zprint("  INFO: Creating empty sheet for Additional page.")
             self.writeCell(owbCurrSheet, "B5", "Date", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE)
             self.writeCell(owbCurrSheet, "C5", "Name", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE)
             self.writeCell(owbCurrSheet, "D5", "Memo", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE)
@@ -1118,19 +1162,24 @@ class MigrateExcel:
         if finalTotalRowNum == -1:
             return -1
 
+        NAME_COLUMN = "B"
+        MEMO_COLUMN = "C"
+        PRINCIPAL_COLUMN = "E"
+        INCOME_COLUMN = "F"
+
         #Set cell formatting by column
         for i in range(dataHeaderRow+1, finalTotalRowNum+1):
             #Bold first column
-            if owbCurrSheet["B%d" % (i)].value is not None:
-                if "total" not in owbCurrSheet["B%d" % (i)].value.lower():
-                    owbCurrSheet["B%d" % (i)].font = FONT__BOLD
+            if owbCurrSheet["%c%d" % (NAME_COLUMN, i)].value is not None:
+                if "total" not in owbCurrSheet["%c%d" % (NAME_COLUMN, i)].value.lower():
+                    owbCurrSheet["%c%d" % (NAME_COLUMN, i)].font = FONT__BOLD
 
             #Set date column format
-            owbCurrSheet["C%d" % (i)].number_format = NUMBER_FORMAT__DATE
+            owbCurrSheet["%c%d" % (MEMO_COLUMN, i)].number_format = NUMBER_FORMAT__DATE
 
             #Set Amount column format
-            owbCurrSheet["E%d" % (i)].number_format = NUMBER_FORMAT__CURRENCY
-            owbCurrSheet["F%d" % (i)].number_format = NUMBER_FORMAT__CURRENCY
+            owbCurrSheet["%c%d" % (PRINCIPAL_COLUMN, i)].number_format = NUMBER_FORMAT__CURRENCY
+            owbCurrSheet["%c%d" % (INCOME_COLUMN, i)].number_format = NUMBER_FORMAT__CURRENCY
 
         #################################
         #     Abbreviate Memo Names     #
@@ -1704,6 +1753,21 @@ class MigrateExcel:
 
         self.migratePageTitle(iwbSheetName, owbSheetName, titleColWidth="G")
 
+        #Check if input sheet is empty
+        rowThresholdToBeEmpty = 7
+        if iwbCurrSheet.max_row < rowThresholdToBeEmpty:
+            self.writeCell(owbCurrSheet, "C5", "Date", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE)
+            self.writeCell(owbCurrSheet, "D5", "Name", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE)
+            self.writeCell(owbCurrSheet, "E5", "Memo", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE)
+            self.writeCell(owbCurrSheet, "F5", "Chk #", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE)
+            self.writeCell(owbCurrSheet, "G5", "Amount", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE)
+            self.writeCell(owbCurrSheet, "A8", "TOTAL", font=FONT__BOLD)
+            self.writeCell(owbCurrSheet, "G8", 0, font=FONT__BOLD, border=BORDER__FINAL_SUM)
+            owbCurrSheet["G8"].number_format = NUMBER_FORMAT__CURRENCY
+
+            zprint("##Successfully migrated Schedule F\n")
+            return 0
+
         try:
 
             #Check if total is positive. If it is, create sheet empty
@@ -1800,21 +1864,25 @@ class MigrateExcel:
         #Get sheet from input workbook
         iwbCurrSheet = self.iwb[iwbSheetName]
 
-        self.migratePageTitle(iwbSheetName, owbSheetName, titleColWidth="I")
+        self.migratePageTitle(iwbSheetName, owbSheetName, titleColWidth="H")
 
         #Create empty sheet for now
-        if 1:
-            self.writeCell(owbCurrSheet, "C5", "Amount", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE)
+        rowThresholdToBeEmpty = 7
+        if iwbCurrSheet.max_row < rowThresholdToBeEmpty:
+            self.writeCell(owbCurrSheet, "C5", "Name", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE)
             self.writeCell(owbCurrSheet, "D5", "Date", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE)
-            self.writeCell(owbCurrSheet, "E5", "Chk #", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE)
-            self.writeCell(owbCurrSheet, "F5", "Amount", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE)
-            self.writeCell(owbCurrSheet, "G5", "Balance", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE)
+            self.writeCell(owbCurrSheet, "E5", "Memo", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE)
+            self.writeCell(owbCurrSheet, "F5", "Chk #", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE)
+            self.writeCell(owbCurrSheet, "G5", "Principal", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE)
+            self.writeCell(owbCurrSheet, "H5", "Income", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE)
             self.writeCell(owbCurrSheet, "A8", "TOTAL", font=FONT__BOLD)
-            self.writeCell(owbCurrSheet, "F8", 0, font=FONT__BOLD, border=BORDER__FINAL_SUM)
-            self.writeCell(owbCurrSheet, "G8", 0, font=FONT__BOLD, border=BORDER__FINAL_SUM)
-            owbCurrSheet["F8"].number_format = NUMBER_FORMAT__CURRENCY
-            owbCurrSheet["G8"].number_format = NUMBER_FORMAT__CURRENCY
+            self.writeCell(owbCurrSheet, "H8", 0, font=FONT__BOLD, border=BORDER__FINAL_SUM)
+            owbCurrSheet["H8"].number_format = NUMBER_FORMAT__CURRENCY
+            zprint(" INFO: Creating empty sheet for Schedule G")
         else:
+            #Dumb copy for now
+            self.dumbCopyWithRange(iwbSheetName, owbSheetName, 4, iwbCurrSheet.max_row, keepFormulas=True)
+
             #TODO: Fill in real code here when i know what to do
             pass
 
@@ -2224,11 +2292,13 @@ class MigrateExcel:
         #Get sheet from input workbook
         iwbCurrSheet = self.iwb[iwbSheetName]
 
-        self.migratePageTitle(iwbSheetName, owbSheetName, titleColWidth="H")
+        self.migratePageTitle(iwbSheetName, owbSheetName, titleColWidth="G")
 
         #Create empty sheet for now
-        if 1:
-            self.writeCell(owbCurrSheet, "C5", "Amount", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE)
+        rowThresholdToBeEmpty = 6
+        if iwbCurrSheet.max_row < rowThresholdToBeEmpty:
+            zprint("  INFO: Creating empty sheet for Lability page beacuse row count is < %d" % (rowThresholdToBeEmpty))
+            self.writeCell(owbCurrSheet, "C5", "Name", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE)
             self.writeCell(owbCurrSheet, "D5", "Date", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE)
             self.writeCell(owbCurrSheet, "E5", "Chk #", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE)
             self.writeCell(owbCurrSheet, "F5", "Amount", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE)
@@ -2240,7 +2310,10 @@ class MigrateExcel:
             owbCurrSheet["G8"].number_format = NUMBER_FORMAT__CURRENCY
             owbCurrSheet.insert_cols(2)
         else:
-            #TODO: Fill in real code here when i know what to do
+            #Dumb copy for now
+            self.dumbCopyWithRange(iwbSheetName, owbSheetName, 4, iwbCurrSheet.max_row, keepFormulas=True)
+
+            # TODO: Fill in real code here when i know what to do
             pass
 
         zprint("##Successfully migrated Liability\n")
@@ -2322,7 +2395,7 @@ class MigrateExcel:
 
 
 def main():
-    #Get input file from user using Exporer
+    #Get input file from user using Explorer
     validFile = False
     while not validFile:
         filename = askopenfilename()
