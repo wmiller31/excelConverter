@@ -6,6 +6,18 @@
 	python.exe excelConverter.py
 
 ## Known limitations ##
+- Sch C
+	- Formulas arent working
+	- ## Migration isnt working completely ##
+	
+- Sch D
+	- ## Migration isnt working at all ##
+
+- Sch G
+	- ## Completely unsuported as of right now ##
+
+- Liability
+	- ## Migration not working ##
 
 - Beginning
 	- Formulas arent complete
@@ -17,29 +29,11 @@
 - Sch A
 	- Income vs Principle not separated
 
-- Sch C
-	- Formulas arent working
-	- ## Migration isnt working completely ##
-	
-- Sch D
-	- ## Migration isnt working at all ##
-
-- Sch F
-	- Doesnt handle if sheet is empty
-	
-- Sch G
-	- ## Completely unsuported as of right now ##
-
 - Sch H
 	- Formulas arent complete
 	- Carrying Value data is missing
-
-- Sch H Detail
-	- Market Value data is missing
 
 - Market Value
 	- Swap date columns 
 	- fix date format
 
-- Liability
-	- ## Migration not working ##
