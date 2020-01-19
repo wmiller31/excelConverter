@@ -1,15 +1,29 @@
+###############################
+# Author: Will Miller         #
+# Last Modified: 1/18/2020    #
+# Version: 1.0.0              #
+###############################
+
+#openpyxl imports
 import openpyxl
 from openpyxl import Workbook
 from openpyxl import load_workbook
 from openpyxl.utils import get_column_letter
-from openpyxl.styles import PatternFill, Border, Side, Alignment, Protection, Font
+from openpyxl.styles import PatternFill, Border, Side, Alignment, Protection, Font, numbers
+
+#builtin imports
 import datetime
 import os
 import time
+
+#tkinter for display windows
 from tkinter.filedialog import askopenfilename
 import tkinter.messagebox
 
+
+#### GLOBALS ####
 NUMBER_FORMAT__CURRENCY = '"$"#,##0.00_-'
+NUMBER_FORMAT__ACCOUNTING = '_($* #,##0.00_);_($* (#,##0.00);_($* "-"??_);_(@_)'
 NUMBER_FORMAT__DATE = "MM/DD/YYYY"
 NUMBER_FORMAT__STANDARD = '#,##0.00'
 
@@ -24,7 +38,6 @@ ALIGNMENT__WRAP_TEXT = Alignment(wrap_text=True)
 ALIGNMENT__HORIZONAL_CENTER = Alignment(horizontal="center")
 ALIGNMENT__HORIZONAL_LEFT = Alignment(horizontal="left")
 
-
 COLUMN_WIDTH__DATE = 12
 COLUMN_WIDTH__CURRENCY = 20
 COLUMN_WIDTH__ROW_TITLE = 5
@@ -34,6 +47,7 @@ COLUMN_WIDTH__EMPTY_ROW = 1
 MIN_PAGE_WIDTH = 88
 IDEAL_PAGE_WIDTH = 90
 MAX_PAGE_WIDTH = 92
+#### END GLOBALS ####
 
 def print_debug(line):
     if 0:
@@ -129,9 +143,9 @@ class MigrateExcel:
         self.unknownInputSheetNames = list()
         self.migrationFailedSheets = list()
 
-        zprint("################################")
-        zprint("#   STARTING SHEET MIGRATION   #")
-        zprint("################################\n")
+        zprint("#################################")
+        zprint("#   STARTING SHEET MIGRATIONS   #")
+        zprint("#################################\n")
 
         #Kick off all sheet conversions one by one
         for iwbSheetName in self.iwb.sheetnames:
@@ -155,60 +169,116 @@ class MigrateExcel:
 
             if owbSheetName == "Beginning":
                 zprint("#Migrating Beginning")
-                migrationStatus = self.migrateBeginning(iwbSheetName, owbSheetName)
+                try:
+                    migrationStatus = self.migrateBeginning(iwbSheetName, owbSheetName)
+                except Exception as e:
+                    zprint("ERROR: Fatal error occurred while migrating %s sheet. Manual port will be required." % (owbSheetName))
+                    zprint("   Fatal Error details: %s" % (str(e)))
 
             elif owbSheetName == "Beginning Detail":
                 zprint("#Migrating Beginning Detail")
-                migrationStatus = self.migrateBeginningDetail(iwbSheetName, owbSheetName)
+                try:
+                    migrationStatus = self.migrateBeginningDetail(iwbSheetName, owbSheetName)
+                except Exception as e:
+                    zprint("ERROR: Fatal error occurred while migrating %s sheet. Manual port will be required." % (owbSheetName))
+                    zprint("   Fatal Error details: %s" % (str(e)))
 
             elif owbSheetName == "Additional":
                 zprint("#Migrating Beginning Detail")
-                migrationStatus = self.migrateAdditional(iwbSheetName, owbSheetName)
+                try:
+                    migrationStatus = self.migrateAdditional(iwbSheetName, owbSheetName)
+                except Exception as e:
+                    zprint("ERROR: Fatal error occurred while migrating %s sheet. Manual port will be required." % (owbSheetName))
+                    zprint("   Fatal Error details: %s" % (str(e)))
 
             elif owbSheetName == "Sch A":
                 zprint("#Migrating Schedule A")
-                migrationStatus = self.migrateSchA(iwbSheetName, owbSheetName)
+                try:
+                    migrationStatus = self.migrateSchA(iwbSheetName, owbSheetName)
+                except Exception as e:
+                    zprint("ERROR: Fatal error occurred while migrating %s sheet. Manual port will be required." % (owbSheetName))
+                    zprint("   Fatal Error details: %s" % (str(e)))
 
             elif owbSheetName == "Sch B":
                 zprint("#Migrating Schedule B")
                 #Custom migration, Create output sheets B and E
-                migrationStatus = self.migrateSchB(iwbSheetName, owbSheetName)
+                try:
+                    migrationStatus = self.migrateSchB(iwbSheetName, owbSheetName)
+                except Exception as e:
+                    zprint("ERROR: Fatal error occurred while migrating %s sheet. Manual port will be required." % (owbSheetName))
+                    zprint("   Fatal Error details: %s" % (str(e)))
 
                 zprint("#Migrating Schedule E")
-                migrationStatus = self.migrateSchB_E(iwbSheetName, "Sch E")
+                try:
+                    migrationStatus = self.migrateSchB_E(iwbSheetName, "Sch E")
+                except Exception as e:
+                    zprint("ERROR: Fatal error occurred while migrating %s sheet. Manual port will be required." % ("Sch E"))
+                    zprint("   Fatal Error details: %s" % (str(e)))
 
 
             elif owbSheetName == "Sch C":
                 zprint("#Migrating Schedule C")
-                migrationStatus = self.migrateSchC(iwbSheetName, owbSheetName)
+                try:
+                    migrationStatus = self.migrateSchC(iwbSheetName, owbSheetName)
+                except Exception as e:
+                    zprint("ERROR: Fatal error occurred while migrating %s sheet. Manual port will be required." % ("Sch E"))
+                    zprint("   Fatal Error details: %s" % (str(e)))
 
             elif owbSheetName == "Sch D":
                 zprint("#Migrating Schedule D")
-                migrationStatus = self.migrateSchD(iwbSheetName, owbSheetName)
+                try:
+                    migrationStatus = self.migrateSchD(iwbSheetName, owbSheetName)
+                except Exception as e:
+                    zprint("ERROR: Fatal error occurred while migrating %s sheet. Manual port will be required." % ("Sch E"))
+                    zprint("   Fatal Error details: %s" % (str(e)))
 
             elif owbSheetName == "Sch F":
                 zprint("#Migrating Schedule F")
-                migrationStatus = self.migrateSchF(iwbSheetName, owbSheetName)
+                try:
+                    migrationStatus = self.migrateSchF(iwbSheetName, owbSheetName)
+                except Exception as e:
+                    zprint("ERROR: Fatal error occurred while migrating %s sheet. Manual port will be required." % ("Sch E"))
+                    zprint("   Fatal Error details: %s" % (str(e)))
 
             elif owbSheetName == "Sch G":
                 zprint("#Migrating Schedule G")
-                migrationStatus = self.migrateSchG(iwbSheetName, owbSheetName)
+                try:
+                    migrationStatus = self.migrateSchG(iwbSheetName, owbSheetName)
+                except Exception as e:
+                    zprint("ERROR: Fatal error occurred while migrating %s sheet. Manual port will be required." % ("Sch E"))
+                    zprint("   Fatal Error details: %s" % (str(e)))
 
             elif owbSheetName == "Sch H":
                 zprint("#Migrating Schedule H")
-                migrationStatus = self.migrateSchH(iwbSheetName, owbSheetName)
+                try:
+                    migrationStatus = self.migrateSchH(iwbSheetName, owbSheetName)
+                except Exception as e:
+                    zprint("ERROR: Fatal error occurred while migrating %s sheet. Manual port will be required." % ("Sch E"))
+                    zprint("   Fatal Error details: %s" % (str(e)))
 
             elif owbSheetName == "Sch H Detail":
                 zprint("#Migrating Schedule H Detail")
-                migrationStatus = self.migrateSchHDetail(iwbSheetName, owbSheetName)
+                try:
+                    migrationStatus = self.migrateSchHDetail(iwbSheetName, owbSheetName)
+                except Exception as e:
+                    zprint("ERROR: Fatal error occurred while migrating %s sheet. Manual port will be required." % ("Sch E"))
+                    zprint("   Fatal Error details: %s" % (str(e)))
 
             elif owbSheetName == "Market Value":
                 zprint("#Migrating Market Value")
-                migrationStatus = self.migrateMarketValue(iwbSheetName, owbSheetName)
+                try:
+                    migrationStatus = self.migrateMarketValue(iwbSheetName, owbSheetName)
+                except Exception as e:
+                    zprint("ERROR: Fatal error occurred while migrating %s sheet. Manual port will be required." % ("Sch E"))
+                    zprint("   Fatal Error details: %s" % (str(e)))
 
             elif owbSheetName == "Liability":
                 zprint("#Migrating Liability")
-                migrationStatus = self.migrateLiability(iwbSheetName, owbSheetName)
+                try:
+                    migrationStatus = self.migrateLiability(iwbSheetName, owbSheetName)
+                except Exception as e:
+                    zprint("ERROR: Fatal error occurred while migrating %s sheet. Manual port will be required." % ("Sch E"))
+                    zprint("   Fatal Error details: %s" % (str(e)))
 
             else:
                 zprint("ERROR: Could not map input sheet (%s) to an ouptut sheet. Migration failed" % (iwbSheetName))
@@ -383,10 +453,10 @@ class MigrateExcel:
 
             if sheetName == "Sch H Detail":
                 currSheet.column_dimensions["A"].width = COLUMN_WIDTH__ROW_TITLE_SMALL
-                currSheet.column_dimensions["B"].width = 43
-                currSheet.column_dimensions["C"].width = 12
-                currSheet.column_dimensions["D"].width = 16
-                currSheet.column_dimensions["E"].width = 16
+                currSheet.column_dimensions["B"].width = 12
+                currSheet.column_dimensions["C"].width = 40
+                currSheet.column_dimensions["D"].width = 18
+                currSheet.column_dimensions["E"].width = 18
 
             if sheetName == "Market Value":
                 currSheet["A5"].alignment = ALIGNMENT__HORIZONAL_LEFT
@@ -632,7 +702,7 @@ class MigrateExcel:
                 pass
 
         if foundRow == -1:
-            zprint("ERROR: Failed to find desired string: %s" % (searchValue))
+            zprint("  ERROR: Failed to find desired string: %s" % (searchValue))
             return -1
         else:
             return foundRow
@@ -665,7 +735,7 @@ class MigrateExcel:
                 colNum += 1
 
         if foundCol == -1:
-            zprint("ERROR: Failed to find desired string: %s" % (searchValue))
+            zprint("  ERROR: Failed to find desired string: %s" % (searchValue))
             return -1
         else:
             return foundCol
@@ -800,7 +870,12 @@ class MigrateExcel:
             for col in owbCurrSheet.iter_cols(min_col=1, max_col=owbCurrSheet.max_column-3):
                 for cell in col:
                     if cell is not None and isinstance(cell.value, str):
+                        #Hack to replace Checking/Savings with "Cash and Cash Equivalents
+                        cell.value = cell.value.replace("Checking/Savings", "Cash and Cash Equivalents")
+
                         if cell.value.lower().startswith("total"):
+
+
                             totalCellRow = cell.row
                             totalCellCol = cell.column_letter
 
@@ -835,91 +910,13 @@ class MigrateExcel:
 
         #Set number format for money columns
         for row in range(startRowOfAssets+1, endRowOfAssets+1):
-            owbCurrSheet["%c%d" % (carryingValueColLetter, row)].number_format = NUMBER_FORMAT__CURRENCY
-            owbCurrSheet["%c%d" % (marketValueColLetter, row)].number_format = NUMBER_FORMAT__CURRENCY
+            owbCurrSheet["%c%d" % (carryingValueColLetter, row)].number_format = NUMBER_FORMAT__ACCOUNTING
+            owbCurrSheet["%c%d" % (marketValueColLetter, row)].number_format = NUMBER_FORMAT__ACCOUNTING
 
         zprint("##Successfully migrated Beginning\n")
         return 0
 
-    ################################
-    #     Migrating Functions      #
-    ################################
-    #Done
-    def migrateBeginning_broken(self, iwbSheetName, owbSheetName):
-        #Create new sheet in output workbook
-        owbCurrSheet = self.owb.create_sheet(title=owbSheetName)
-        #Get sheet from input workbook
-        iwbCurrSheet = self.iwb[iwbSheetName]
-
-        self.migratePageTitle(iwbSheetName, owbSheetName, titleColWidth="G")
-
-        #####################
-        #   Get Data Range  #
-        #####################
-        #Get start/end rows for assets
-        startRowOfAssets, endRowOfAssets = self.getRowRangeGeneric(iwbSheetName, "A", "assets", "total assets")
-        if startRowOfAssets == -1 or endRowOfAssets == -1:
-            return -1
-
-        #Get start/end rows for current asset
-        startRowCurrentAssets, endRowCurrentAssets = self.getRowRangeGeneric(iwbSheetName, "B", "current assets", "total current assets")
-        if startRowCurrentAssets == -1 or endRowCurrentAssets == -1:
-            return -1
-
-        #Get start/end rows for fixed assests
-        startRowFixedAssets, endRowFixedAssets = self.getRowRangeGeneric(iwbSheetName, "B", "fixed assets", "total fixed assets")
-        if startRowFixedAssets == -1 or endRowFixedAssets == -1:
-            return -1
-
-
-        #Copy over contents to start with
-        self.dumbCopyWithRange(iwbSheetName, owbSheetName, startRowOfAssets, endRowOfAssets)
-
-        #Set major columns to BOLD
-        for col in owbCurrSheet.iter_cols(min_col=1, max_col=3):
-            for cell in col:
-                if cell is not None:
-                    cell.font = Font(bold=True)
-
-        # Write new Value Titles
-        self.writeCell(owbCurrSheet, "F5", "Carrying Value", font=Font(bold=True))
-        owbCurrSheet["F5"].border = Border(bottom=Side(border_style="thick"))
-        self.writeCell(owbCurrSheet, "G5", "Market Value", font=Font(bold=True))
-        owbCurrSheet["G5"].border = Border(bottom=Side(border_style="thick"))
-
-        #Set number format for money columns
-        for row in range(startRowOfAssets+1, endRowOfAssets+1):
-            for col_letter in ["F", "G"]:
-                owbCurrSheet["%c%d" % (col_letter, row)].number_format = NUMBER_FORMAT__CURRENCY
-
-        #Copy input data to market value column
-        for row in range(startRowOfAssets + 1, endRowOfAssets + 1):
-            srcCol, destCol = "F", "G"
-            owbCurrSheet["%c%d" % (destCol, row)].value = owbCurrSheet["%c%d" % (srcCol, row)].value
-
-        #Mark bad data in red
-        for row in range(startRowOfAssets + 1, endRowOfAssets + 1):
-            owbCurrSheet["F%d" % (row)].font = Font(color='00FF0000')
-
-        #Set formula for Final Total Assets cell, along with formatting
-        self.writeCell(owbCurrSheet, "F%d" % (endRowOfAssets), "=ROUND(F%d+F%d,5)" % (endRowCurrentAssets, endRowFixedAssets),
-                  font = Font(bold=True), border=Border(bottom=Side(border_style="double"), top=Side(border_style="medium")))
-        self.writeCell(owbCurrSheet, "G%d" % (endRowOfAssets), "=ROUND(G%d+G%d,5)" % (endRowCurrentAssets, endRowFixedAssets),
-                  font = Font(bold=True), border=Border(bottom=Side(border_style="double"), top=Side(border_style="medium")))
-
-        #Custom set column widths
-        owbCurrSheet.column_dimensions["A"].width = 3
-        owbCurrSheet.column_dimensions["B"].width = 8
-        owbCurrSheet.column_dimensions["C"].width = 8
-        owbCurrSheet.column_dimensions["D"].width = 8
-        owbCurrSheet.column_dimensions["E"].width = 30
-        owbCurrSheet.column_dimensions["F"].width = 16
-        owbCurrSheet.column_dimensions["G"].width = 16
-
-        zprint("##Successfully migrated Beginning\n")
-        return 0
-
-    # Done -- Totals arent tallied
+    # Done
     def migrateBeginningDetail(self, iwbSheetName, owbSheetName):
         #Create new sheet in output workbook
         owbCurrSheet = self.owb.create_sheet(title=owbSheetName)
@@ -993,12 +990,13 @@ class MigrateExcel:
 
             #Copy Asset Value -> Carrying Value
             owbCurrSheet["D%d" % i].value = iwbCurrSheet["%c%d" % (get_column_letter(assetValueCol), i)].value
-            owbCurrSheet["D%d" % i].font = Font(color='00FF0000')
-            owbCurrSheet["D%d" % i].number_format = NUMBER_FORMAT__CURRENCY
+            #owbCurrSheet["D%d" % i].font = Font(color='00FF0000')
+            owbCurrSheet["D%d" % i].number_format = NUMBER_FORMAT__ACCOUNTING
 
-            #Copy Asset Value -> Market Value
-            owbCurrSheet["E%d" % i].value = iwbCurrSheet["%c%d" % (get_column_letter(assetValueCol), i)].value
-            owbCurrSheet["E%d" % i].number_format = NUMBER_FORMAT__CURRENCY
+            #Copy Asset Value -> Market Value -- Write 0 instead
+            #owbCurrSheet["E%d" % i].value = iwbCurrSheet["%c%d" % (get_column_letter(assetValueCol), i)].value
+            owbCurrSheet["E%d" % i].value = 0
+            owbCurrSheet["E%d" % i].number_format = NUMBER_FORMAT__ACCOUNTING
 
 
         ##########################
@@ -1007,15 +1005,12 @@ class MigrateExcel:
         self.writeCell(owbCurrSheet, "A%d" % finalTotalRow, "TOTAL", font=Font(bold=True))
 
         self.writeCell(owbCurrSheet, "D%d" % finalTotalRow, "=ROUND(SUM(D%d:D%d),5)" % (startRowOfData, endRowOfInventory), font=Font(bold=True))
-        owbCurrSheet["D%d" % finalTotalRow].number_format = NUMBER_FORMAT__CURRENCY
+        owbCurrSheet["D%d" % finalTotalRow].number_format = NUMBER_FORMAT__ACCOUNTING
         owbCurrSheet["D%d" % finalTotalRow].border = Border(top=Side(border_style="thick"), bottom=Side(border_style="double"))
 
         self.writeCell(owbCurrSheet, "E%d" % finalTotalRow, "=ROUND(SUM(E%d:E%d),5)" % (startRowOfData, endRowOfInventory), font=Font(bold=True))
-        owbCurrSheet["E%d" % finalTotalRow].number_format = NUMBER_FORMAT__CURRENCY
+        owbCurrSheet["E%d" % finalTotalRow].number_format = NUMBER_FORMAT__ACCOUNTING
         owbCurrSheet["E%d" % finalTotalRow].border = Border(top=Side(border_style="thick"), bottom=Side(border_style="double"))
-
-
-        owbCurrSheet.column_dimensions["A"].width = 3
 
         zprint("##Successfully migrated Beginning Detail\n")
         return 0
@@ -1036,7 +1031,7 @@ class MigrateExcel:
             self.writeCell(owbCurrSheet, "B5", "Date", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE)
             self.writeCell(owbCurrSheet, "C5", "Name", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE)
             self.writeCell(owbCurrSheet, "D5", "Memo", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE)
-            self.writeCell(owbCurrSheet, "E5", "Carrying Value", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE)
+            self.writeCell(owbCurrSheet, "E5", "Amount", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE)
             self.writeCell(owbCurrSheet, "A6", "TOTAL", font=FONT__BOLD)
             self.writeCell(owbCurrSheet, "E6", 0, font=FONT__BOLD, border=BORDER__FINAL_SUM)
             zprint("##Successfully migrated Additional\n")
@@ -1084,21 +1079,21 @@ class MigrateExcel:
             for cell in row:
                 if cell.value is not None:
                     if cell.value == "Paid Amount":
-                        cell.value = "Carrying Value"
+                        cell.value = "Amount"
                     cell.font = Font(bold=True)
                     cell.border = Border(bottom=Side(border_style="thick"))
 
         #Set cell formatting
         for i in range(rowNumPaidAmount+1, rowNumTOTAL):
             owbCurrSheet["B%d" % (i)].number_format = NUMBER_FORMAT__DATE
-            owbCurrSheet["E%d" % (i)].number_format = NUMBER_FORMAT__CURRENCY
+            owbCurrSheet["E%d" % (i)].number_format = NUMBER_FORMAT__ACCOUNTING
 
         #Create Sum Formula
         if rowNumTOTAL != rowNumPaidAmount+1:
             print_debug("Formula: =ROUND(SUM(E%d:E%d),5)" % ((rowNumPaidAmount+1, rowNumTOTAL-1)))
             self.writeCell(owbCurrSheet, "E%d" % (rowNumTOTAL), "=ROUND(SUM(E%d:E%d),5)" % (rowNumPaidAmount+1, rowNumTOTAL-1),
                       border=BORDER__FINAL_SUM, font=FONT__BOLD)
-            owbCurrSheet["E%d" % (rowNumTOTAL)].number_format = NUMBER_FORMAT__CURRENCY
+            owbCurrSheet["E%d" % (rowNumTOTAL)].number_format = NUMBER_FORMAT__ACCOUNTING
         else:
             zprint("This sheet was empty. Not creating a final formula.")
 
@@ -1178,8 +1173,8 @@ class MigrateExcel:
             owbCurrSheet["%c%d" % (MEMO_COLUMN, i)].number_format = NUMBER_FORMAT__DATE
 
             #Set Amount column format
-            owbCurrSheet["%c%d" % (PRINCIPAL_COLUMN, i)].number_format = NUMBER_FORMAT__CURRENCY
-            owbCurrSheet["%c%d" % (INCOME_COLUMN, i)].number_format = NUMBER_FORMAT__CURRENCY
+            owbCurrSheet["%c%d" % (PRINCIPAL_COLUMN, i)].number_format = NUMBER_FORMAT__ACCOUNTING
+            owbCurrSheet["%c%d" % (INCOME_COLUMN, i)].number_format = NUMBER_FORMAT__ACCOUNTING
 
         #################################
         #     Abbreviate Memo Names     #
@@ -1348,9 +1343,9 @@ class MigrateExcel:
             owbCurrSheet["B%d" % (i)].number_format = NUMBER_FORMAT__STANDARD
 
             #Set currency formats
-            owbCurrSheet["D%d" % (i)].number_format = NUMBER_FORMAT__CURRENCY
-            owbCurrSheet["E%d" % (i)].number_format = NUMBER_FORMAT__CURRENCY
-            owbCurrSheet["F%d" % (i)].number_format = NUMBER_FORMAT__CURRENCY
+            owbCurrSheet["D%d" % (i)].number_format = NUMBER_FORMAT__ACCOUNTING
+            owbCurrSheet["E%d" % (i)].number_format = NUMBER_FORMAT__ACCOUNTING
+            owbCurrSheet["F%d" % (i)].number_format = NUMBER_FORMAT__ACCOUNTING
 
 
         #######################
@@ -1468,9 +1463,9 @@ class MigrateExcel:
             owbCurrSheet["B%d" % (i)].number_format = NUMBER_FORMAT__STANDARD
 
             #Set currency formats
-            owbCurrSheet["D%d" % (i)].number_format = NUMBER_FORMAT__CURRENCY
-            owbCurrSheet["E%d" % (i)].number_format = NUMBER_FORMAT__CURRENCY
-            owbCurrSheet["F%d" % (i)].number_format = NUMBER_FORMAT__CURRENCY
+            owbCurrSheet["D%d" % (i)].number_format = NUMBER_FORMAT__ACCOUNTING
+            owbCurrSheet["E%d" % (i)].number_format = NUMBER_FORMAT__ACCOUNTING
+            owbCurrSheet["F%d" % (i)].number_format = NUMBER_FORMAT__ACCOUNTING
 
 
         #######################
@@ -1523,7 +1518,7 @@ class MigrateExcel:
                 self.writeCell(owbCurrSheet, "G5", "Amount", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE)
                 self.writeCell(owbCurrSheet, "A8", "TOTAL", font=FONT__BOLD)
                 self.writeCell(owbCurrSheet, "G8", 0, font=FONT__BOLD, border=BORDER__FINAL_SUM)
-                owbCurrSheet["G8"].number_format = NUMBER_FORMAT__CURRENCY
+                owbCurrSheet["G8"].number_format = NUMBER_FORMAT__ACCOUNTING
                 zprint("##Successfully migrated Schedule C\n")
 
                 return 0
@@ -1555,14 +1550,14 @@ class MigrateExcel:
         for col in self.findEmptyCols(owbSheetName):
             owbCurrSheet.delete_cols(col)
 
-        #Delete columns with specified data header
+        #Delete columns with specified data header if they exist
         for colName in ["type", "balance"]:
             colToDel = self.getColNumByString(dataHeaderRow, colName, owbSheetName=owbSheetName)
             if colToDel == -1:
-                return -1
+                zprint("  Didnt find column with header \"%s\" to delete. Skipping." % (colName))
+                continue
             else:
                 owbCurrSheet.delete_cols(colToDel)
-
 
         #################################
         #  Manipulate Cell Formatting   #
@@ -1594,7 +1589,7 @@ class MigrateExcel:
             owbCurrSheet["C%d" % (i)].number_format = NUMBER_FORMAT__DATE
 
             #Set Amount column format
-            owbCurrSheet["G%d" % (i)].number_format = NUMBER_FORMAT__CURRENCY
+            owbCurrSheet["G%d" % (i)].number_format = NUMBER_FORMAT__ACCOUNTING
 
             #Set Memo and Name text wrapping
             owbCurrSheet["D%d" % (i)].alignment = ALIGNMENT__WRAP_TEXT
@@ -1728,7 +1723,7 @@ class MigrateExcel:
 
             #Set Amount column format
             amountCol = self.getColNumByString(dataHeaderRow, "Principal", owbSheetName=owbSheetName)
-            owbCurrSheet["%c%d" % (get_column_letter(amountCol), i)].number_format = NUMBER_FORMAT__CURRENCY
+            owbCurrSheet["%c%d" % (get_column_letter(amountCol), i)].number_format = NUMBER_FORMAT__ACCOUNTING
 
             #Set Name column text wrap
             nameCol = self.getColNumByString(dataHeaderRow, "Name", owbSheetName=owbSheetName)
@@ -1763,7 +1758,7 @@ class MigrateExcel:
             self.writeCell(owbCurrSheet, "G5", "Amount", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE)
             self.writeCell(owbCurrSheet, "A8", "TOTAL", font=FONT__BOLD)
             self.writeCell(owbCurrSheet, "G8", 0, font=FONT__BOLD, border=BORDER__FINAL_SUM)
-            owbCurrSheet["G8"].number_format = NUMBER_FORMAT__CURRENCY
+            owbCurrSheet["G8"].number_format = NUMBER_FORMAT__ACCOUNTING
 
             zprint("##Successfully migrated Schedule F\n")
             return 0
@@ -1787,7 +1782,7 @@ class MigrateExcel:
                     self.writeCell(owbCurrSheet, "G5", "Amount", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE)
                     self.writeCell(owbCurrSheet, "A8", "TOTAL", font=FONT__BOLD)
                     self.writeCell(owbCurrSheet, "G8", 0, font=FONT__BOLD, border=BORDER__FINAL_SUM)
-                    owbCurrSheet["G8"].number_format = NUMBER_FORMAT__CURRENCY
+                    owbCurrSheet["G8"].number_format = NUMBER_FORMAT__ACCOUNTING
                     zprint("##Successfully migrated Schedule F\n")
                     return 0
                 else:
@@ -1850,7 +1845,7 @@ class MigrateExcel:
                 owbCurrSheet["C%d" % (i)].number_format = NUMBER_FORMAT__DATE
 
                 #Set Amount column format
-                owbCurrSheet["G%d" % (i)].number_format = NUMBER_FORMAT__CURRENCY
+                owbCurrSheet["G%d" % (i)].number_format = NUMBER_FORMAT__ACCOUNTING
 
             zprint("##Successfully migrated Schedule F\n")
             return 0
@@ -1877,7 +1872,7 @@ class MigrateExcel:
             self.writeCell(owbCurrSheet, "H5", "Income", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE)
             self.writeCell(owbCurrSheet, "A8", "TOTAL", font=FONT__BOLD)
             self.writeCell(owbCurrSheet, "H8", 0, font=FONT__BOLD, border=BORDER__FINAL_SUM)
-            owbCurrSheet["H8"].number_format = NUMBER_FORMAT__CURRENCY
+            owbCurrSheet["H8"].number_format = NUMBER_FORMAT__ACCOUNTING
             zprint(" INFO: Creating empty sheet for Schedule G")
         else:
             #Dumb copy for now
@@ -1935,6 +1930,9 @@ class MigrateExcel:
             for col in owbCurrSheet.iter_cols(min_col=1, max_col=owbCurrSheet.max_column - 3):
                 for cell in col:
                     if cell is not None and isinstance(cell.value, str):
+                        #Hack to replace Checking/Savings with "Cash and Cash Equivalents
+                        cell.value = cell.value.replace("Checking/Savings", "Cash and Cash Equivalents")
+
                         if cell.value.lower().startswith("total"):
                             totalCellRow = cell.row
                             totalCellCol = cell.column_letter
@@ -1972,84 +1970,13 @@ class MigrateExcel:
 
         # Set number format for money columns
         for row in range(startRowOfAssets + 1, endRowOfAssets + 1):
-            owbCurrSheet["%c%d" % (carryingValueColLetter, row)].number_format = NUMBER_FORMAT__CURRENCY
-            owbCurrSheet["%c%d" % (marketValueColLetter, row)].number_format = NUMBER_FORMAT__CURRENCY
+            owbCurrSheet["%c%d" % (carryingValueColLetter, row)].number_format = NUMBER_FORMAT__ACCOUNTING
+            owbCurrSheet["%c%d" % (marketValueColLetter, row)].number_format = NUMBER_FORMAT__ACCOUNTING
 
         zprint("##Successfully migrated Schedule H\n")
         return 0
 
-    # Done -- Totals arent tallied
-    def migrateSchH_broken(self, iwbSheetName, owbSheetName):
-        #Create new sheet in output workbook
-        owbCurrSheet = self.owb.create_sheet(title=owbSheetName)
-        #Get sheet from input workbook
-        iwbCurrSheet = self.iwb[iwbSheetName]
-
-        self.migratePageTitle(iwbSheetName, owbSheetName, titleColWidth="G")
-
-        ###########################
-        #  Get Data rows to copy  #
-        ###########################
-        startRow, endRow = 5, self.getRowNumByString("A", "total assets", iwbSheetName=iwbSheetName)
-        if startRow == -1 or endRow == -1:
-            return -1
-
-        #Copy data to new sheet
-        self.dumbCopyWithRange(iwbSheetName, owbSheetName, startRow, endRow)
-
-
-        ##########################
-        #    Manipulate Rows     #
-        ##########################
-        #Insert extra row for data headers
-        owbCurrSheet.insert_rows(4)
-        dataHeaderRow = 5
-
-
-        ##########################
-        #    Manipulate Cols     #
-        ##########################
-        #Delete empty columns
-        for col in self.findEmptyCols(owbSheetName):
-            owbCurrSheet.delete_cols(col)
-
-        #Add column header
-        self.writeCell(owbCurrSheet, "%c%d" % (get_column_letter(owbCurrSheet.max_column), dataHeaderRow), "Market Value", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE)
-
-        #Insert Carrying Value column
-        owbCurrSheet.insert_cols(owbCurrSheet.max_column)
-        self.writeCell(owbCurrSheet, "%c%d" % (get_column_letter(owbCurrSheet.max_column-1), dataHeaderRow), "Carrying Value", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE)
-
-
-        #################################
-        #  Manipulate Cell Formatting   #
-        #################################
-        endRow = self.getRowNumByString("A", "total assets", owbSheetName=owbSheetName)
-        if endRow == -1:
-            zprint("ERORR: Failed to find total assets row")
-            return -1
-
-        #Set TOTAL_ASSETS row to bold
-        owbCurrSheet["A%d" % (endRow)].font = FONT__BOLD
-
-        #Set cell formatting by column
-        for i in range(dataHeaderRow+1, endRow+1):
-            #Bold first column
-            if owbCurrSheet["A%d" % (i)].value is not None:
-                owbCurrSheet["A%d" % (i)].font = FONT__BOLD
-
-            if owbCurrSheet["B%d" % (i)].value is not None:
-                owbCurrSheet["B%d" % (i)].font = FONT__BOLD
-
-            #Set Amount column format
-            owbCurrSheet["F%d" % (i)].number_format = NUMBER_FORMAT__CURRENCY
-            owbCurrSheet["G%d" % (i)].number_format = NUMBER_FORMAT__CURRENCY
-
-
-        zprint("##Successfully migrated Schedule H\n")
-        return 0
-
-    # Done -- Swap QTY and Investment columns
+    #Same as Beginning Detail code
     def migrateSchHDetail(self, iwbSheetName, owbSheetName):
         #Create new sheet in output workbook
         owbCurrSheet = self.owb.create_sheet(title=owbSheetName)
@@ -2058,79 +1985,92 @@ class MigrateExcel:
 
         self.migratePageTitle(iwbSheetName, owbSheetName, titleColWidth="E")
 
+        ########################
+        ## Write table header ##
+        ########################
+        self.writeCell(owbCurrSheet, "B5", "QTY", font=Font(bold=True))
+        self.writeCell(owbCurrSheet, "C5", "Investment", font=Font(bold=True))
+        self.writeCell(owbCurrSheet, "D5", "Carrying Value", font=Font(bold=True))
+        self.writeCell(owbCurrSheet, "E5", "Market Value", font=Font(bold=True))
 
-        ###########################
-        #  Get Data rows to copy  #
-        ###########################
-        startRow, endRow = 4, self.getRowNumByString("A", "total", iwbSheetName=iwbSheetName)
-        if startRow == -1 or endRow == -1:
+        #Set cells to have thick bottom border
+        owbCurrSheet["B5"].border = Border(bottom=Side(border_style="thick"))
+        owbCurrSheet["C5"].border = Border(bottom=Side(border_style="thick"))
+        owbCurrSheet["D5"].border = Border(bottom=Side(border_style="thick"))
+        owbCurrSheet["E5"].border = Border(bottom=Side(border_style="thick"))
+
+        ##############################################
+        ##  Find row range of table for input data  ##
+        ##############################################
+        startRowOfData = -1
+        endRowOfInventory = -1
+        for i in range(1, iwbCurrSheet.max_row):
+            colData = iwbCurrSheet["B%d" % (i)].value
+            #zprint("colData: %s" % (colData))
+            if colData is None:
+                continue
+
+            if colData.lower() == "inventory":
+                startRowOfData = i+1
+                print_debug("(migrateSchHDetail) Inventory starts on row %d" % (startRowOfData))
+            if colData.lower() == "total inventory":
+                endRowOfInventory = i-1
+                print_debug("(migrateSchHDetail) End of inventory starts on row %d" % (endRowOfInventory))
+
+        #Make sure data is extracted properly
+        if startRowOfData == -1 or endRowOfInventory == -1:
+            zprint("ERROR: (migrateSchHDetail) Failed to extract start and end rows for data on sheet %s" % (iwbSheetName))
             return -1
 
-        #Copy data to new sheet
-        self.dumbCopyWithRange(iwbSheetName, owbSheetName, startRow, endRow+1)
+        finalTotalRow = endRowOfInventory+1
 
         ##########################
-        #    Manipulate Rows     #
+        ## Write table contents ##
         ##########################
-        #Delete useless rows
-        owbCurrSheet.delete_rows(endRow-1)
-        owbCurrSheet.delete_rows(startRow+1)
+        #Get column letter for On Hand (Converts to QTY)
+        onHandCol = self.getColNumByString(4, "On Hand", iwbSheetName=iwbSheetName)
+        #Get column letter for Asset Value (Converts to Carrying Value)
+        assetValueCol = self.getColNumByString(4, "Asset Value", iwbSheetName=iwbSheetName)
 
-        #Insert extra row for data headers
-        owbCurrSheet.insert_rows(4)
-        dataHeaderRow = 5
-
-        ##########################
-        #    Manipulate Cols     #
-        ##########################
-        #Add header to investment line
-        self.writeCell(owbCurrSheet, "%c%d" % ("C", dataHeaderRow), "Investment", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE)
-
-        #Delete empty columns
-        for col in self.findEmptyCols(owbSheetName):
-            owbCurrSheet.delete_cols(col)
-
-        #Add Carrying Value column
-        owbCurrSheet.insert_cols(owbCurrSheet.max_column + 1)
-        self.writeCell(owbCurrSheet, "%c%d" % (get_column_letter(owbCurrSheet.max_column+1), dataHeaderRow), "Market Value", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE)
-
-
-        #################################
-        #  Manipulate Cell Formatting   #
-        #################################
-        #Set row of column titles to bold and underlined
-        for row in owbCurrSheet.iter_rows(min_row=dataHeaderRow, max_row=dataHeaderRow):
-            for cell in row:
-                if cell.value is not None:
-                    if cell.value == "Asset Value":
-                        cell.value = "Carrying Value"
-                    if cell.value == "On Hand":
-                        cell.value = "QTY"
-                    cell.font = FONT__BOLD
-                    cell.border = BORDER__BOLD_UNDERLINE
-
-
-        endRow = self.getRowNumByString("A", "total", owbSheetName=owbSheetName)
-        if endRow == -1:
+        if onHandCol == -1:
+            zprint("ERROR: Unable to find On Hand column from input sheet %s." % (iwbSheetName))
             return -1
 
-        #Set cell formatting by column
-        for i in range(dataHeaderRow+1, endRow+1):
-            #Set date column format
-            owbCurrSheet["C%d" % (i)].number_format = NUMBER_FORMAT__STANDARD
+        if assetValueCol == -1:
+            zprint("ERROR: Unable to find Asset Value column from input sheet %s." % (iwbSheetName))
+            return -1
 
-            #Set Amount column format
-            owbCurrSheet["D%d" % (i)].number_format = NUMBER_FORMAT__CURRENCY
-            owbCurrSheet["E%d" % (i)].number_format = NUMBER_FORMAT__CURRENCY
+        for i in range(startRowOfData, finalTotalRow):
+            #Copy investments
+            owbCurrSheet["C%d" % i].value = iwbCurrSheet["C%d" % i].value
 
-        #Create total's formula
-        for colLetter in ["D", "E"]:
-            owbCurrSheet["%s%d" % (colLetter, endRow)].value = "=ROUND(SUM(%s%d:%s%d),5)" % (colLetter, dataHeaderRow+1, colLetter, endRow-1)
-            owbCurrSheet["%s%d" % (colLetter, endRow)].border = BORDER__FINAL_SUM
-            owbCurrSheet["%s%d" % (colLetter, endRow)].font = FONT__BOLD
+            #Copy On Hand -> QTY
+            owbCurrSheet["B%d" % i].value = iwbCurrSheet["%c%d" % (get_column_letter(onHandCol), i)].value
+            owbCurrSheet["B%d" % i].number_format = NUMBER_FORMAT__STANDARD
 
-        #Delete QTY formula
-        owbCurrSheet["C%d" % (endRow)].value = ""
+            #Copy Asset Value -> Carrying Value
+            owbCurrSheet["D%d" % i].value = iwbCurrSheet["%c%d" % (get_column_letter(assetValueCol), i)].value
+            #owbCurrSheet["D%d" % i].font = Font(color='00FF0000')
+            owbCurrSheet["D%d" % i].number_format = NUMBER_FORMAT__ACCOUNTING
+
+            #Copy Asset Value -> Market Value -- Set value to 0 instead
+            #owbCurrSheet["E%d" % i].value = iwbCurrSheet["%c%d" % (get_column_letter(assetValueCol), i)].value
+            owbCurrSheet["E%d" % i].value = 0
+            owbCurrSheet["E%d" % i].number_format = NUMBER_FORMAT__ACCOUNTING
+
+
+        ##########################
+        ##   Write Final Row    ##
+        ##########################
+        self.writeCell(owbCurrSheet, "A%d" % finalTotalRow, "TOTAL", font=Font(bold=True))
+
+        self.writeCell(owbCurrSheet, "D%d" % finalTotalRow, "=ROUND(SUM(D%d:D%d),5)" % (startRowOfData, endRowOfInventory), font=Font(bold=True))
+        owbCurrSheet["D%d" % finalTotalRow].number_format = NUMBER_FORMAT__ACCOUNTING
+        owbCurrSheet["D%d" % finalTotalRow].border = Border(top=Side(border_style="thick"), bottom=Side(border_style="double"))
+
+        self.writeCell(owbCurrSheet, "E%d" % finalTotalRow, "=ROUND(SUM(E%d:E%d),5)" % (startRowOfData, endRowOfInventory), font=Font(bold=True))
+        owbCurrSheet["E%d" % finalTotalRow].number_format = NUMBER_FORMAT__ACCOUNTING
+        owbCurrSheet["E%d" % finalTotalRow].border = Border(top=Side(border_style="thick"), bottom=Side(border_style="double"))
 
         zprint("##Successfully migrated Schedule H Detail\n")
         return 0
@@ -2174,6 +2114,9 @@ class MigrateExcel:
             for col in owbCurrSheet.iter_cols(min_col=1, max_col=owbCurrSheet.max_column-3):
                 for cell in col:
                     if cell is not None and isinstance(cell.value, str):
+                        #Hack to replace Checking/Savings with "Cash and Cash Equivalents
+                        cell.value = cell.value.replace("Checking/Savings", "Cash and Cash Equivalents")
+
                         if cell.value.lower().startswith("total"):
                             totalCellRow = cell.row
                             totalCellCol = cell.column_letter
@@ -2216,71 +2159,8 @@ class MigrateExcel:
 
         #Set number format for money columns
         for row in range(startRowOfAssets+1, endRowOfAssets+1):
-            owbCurrSheet["%c%d" % (startDateColLetter, row)].number_format = NUMBER_FORMAT__CURRENCY
-            owbCurrSheet["%c%d" % (endDateColLetter, row)].number_format = NUMBER_FORMAT__CURRENCY
-
-        zprint("##Successfully migrated Market Value\n")
-        return 0
-
-    # Mostly the same as Schedule H
-    def migrateMarketValue_broken(self, iwbSheetName, owbSheetName):
-        #Create new sheet in output workbook
-        owbCurrSheet = self.owb.create_sheet(title=owbSheetName)
-        #Get sheet from input workbook
-        iwbCurrSheet = self.iwb[iwbSheetName]
-
-        self.migratePageTitle(iwbSheetName, owbSheetName, titleColWidth="G")
-
-        ###########################
-        #  Get Data rows to copy  #
-        ###########################
-        startRow, endRow = 4, self.getRowNumByString("A", "total assets", iwbSheetName=iwbSheetName)
-        if startRow == -1 or endRow == -1:
-            return -1
-
-        #Copy data to new sheet
-        self.dumbCopyWithRange(iwbSheetName, owbSheetName, startRow, endRow)
-
-
-        ##########################
-        #    Manipulate Rows     #
-        ##########################
-        dataHeaderRow = 5
-
-        ##########################
-        #    Manipulate Cols     #
-        ##########################
-        #Delete empty columns
-        for col in self.findEmptyCols(owbSheetName):
-            owbCurrSheet.delete_cols(col)
-
-        #################################
-        #  Manipulate Cell Formatting   #
-        #################################
-        #Set row of column titles to bold and underlined
-        for row in owbCurrSheet.iter_rows(min_row=dataHeaderRow, max_row=dataHeaderRow):
-            for cell in row:
-                if cell.value is not None:
-                    cell.font = Font(bold=True)
-                    cell.border = Border(bottom=Side(border_style="thick"))
-
-        endRow = self.getRowNumByString("A", "total assets", owbSheetName=owbSheetName)
-        if endRow == -1:
-            zprint("ERORR: Failed to find total assets row")
-            return -1
-
-        #Set cell formatting by column
-        for i in range(dataHeaderRow+1, endRow+1):
-            #Bold first column
-            if owbCurrSheet["A%d" % (i)].value is not None:
-                owbCurrSheet["A%d" % (i)].font = FONT__BOLD
-
-            if owbCurrSheet["B%d" % (i)].value is not None:
-                owbCurrSheet["B%d" % (i)].font = FONT__BOLD
-
-            #Set Amount column format
-            owbCurrSheet["F%d" % (i)].number_format = NUMBER_FORMAT__CURRENCY
-            owbCurrSheet["G%d" % (i)].number_format = NUMBER_FORMAT__CURRENCY
+            owbCurrSheet["%c%d" % (startDateColLetter, row)].number_format = NUMBER_FORMAT__ACCOUNTING
+            owbCurrSheet["%c%d" % (endDateColLetter, row)].number_format = NUMBER_FORMAT__ACCOUNTING
 
         zprint("##Successfully migrated Market Value\n")
         return 0
@@ -2306,8 +2186,8 @@ class MigrateExcel:
             self.writeCell(owbCurrSheet, "A8", "TOTAL", font=FONT__BOLD)
             self.writeCell(owbCurrSheet, "F8", 0, font=FONT__BOLD, border=BORDER__FINAL_SUM)
             self.writeCell(owbCurrSheet, "G8", 0, font=FONT__BOLD, border=BORDER__FINAL_SUM)
-            owbCurrSheet["F8"].number_format = NUMBER_FORMAT__CURRENCY
-            owbCurrSheet["G8"].number_format = NUMBER_FORMAT__CURRENCY
+            owbCurrSheet["F8"].number_format = NUMBER_FORMAT__ACCOUNTING
+            owbCurrSheet["G8"].number_format = NUMBER_FORMAT__ACCOUNTING
             owbCurrSheet.insert_cols(2)
         else:
             #Dumb copy for now
@@ -2386,12 +2266,12 @@ class MigrateExcel:
         #Create summary cell for Charges
         self.writeCell(owbCurrSheet, "D%d"%(chargesRowNum+numOfChargeLines+1), "=SUM(D%d:D%d)" % (chargesRowNum+1, chargesRowNum+numOfChargeLines))
         owbCurrSheet["D%d"%(chargesRowNum+numOfChargeLines+1)].border = Border(top=Side(border_style="thick"), bottom=Side(border_style="double"))
-        owbCurrSheet["D%d"%(chargesRowNum+numOfChargeLines+1)].number_format = NUMBER_FORMAT__CURRENCY
+        owbCurrSheet["D%d"%(chargesRowNum+numOfChargeLines+1)].number_format = NUMBER_FORMAT__ACCOUNTING
 
         # Create summary cell for Credits
         self.writeCell(owbCurrSheet, "D%d"%(creditsRowNum+numOfCreditLines+1), "=SUM(D%d:D%d)" % (creditsRowNum+1, creditsRowNum+numOfCreditLines))
         owbCurrSheet["D%d"%(creditsRowNum+numOfCreditLines+1)].border = Border(top=Side(border_style="thick"), bottom=Side(border_style="double"))
-        owbCurrSheet["D%d"%(creditsRowNum+numOfCreditLines+1)].number_format = NUMBER_FORMAT__CURRENCY
+        owbCurrSheet["D%d"%(creditsRowNum+numOfCreditLines+1)].number_format = NUMBER_FORMAT__ACCOUNTING
 
 
 def main():
@@ -2420,6 +2300,8 @@ def main():
             validFile = False
 
     zprint("Converting file: %s" % (filename))
+
+    #Create class to handle the migration
     migrateExcel = MigrateExcel(filename)
 
     #documetnation:
@@ -2427,8 +2309,8 @@ def main():
 
     #Open both input and output workbooks to start
     migrateExcel.openIWB()
-    migrateExcel.openOWB()
     migrateExcel.openIWB_dataOnly()
+    migrateExcel.openOWB()
 
     #Process input workbook to dynamically start tasks
     migrateExcel.extractSheetNameMappings()
