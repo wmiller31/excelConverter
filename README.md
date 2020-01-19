@@ -6,10 +6,6 @@
 	python.exe excelConverter.py
 
 ## Known limitations ##
-- Sch C
-	- Formulas arent working
-	- ## Migration isnt working completely ##
-	
 - Sch D
 	- ## Migration isnt working at all ##
 
