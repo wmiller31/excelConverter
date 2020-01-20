@@ -1,7 +1,7 @@
 ###############################
 # Author: Will Miller         #
-# Last Modified: 1/18/2020    #
-# Version: 0.9.0              #
+# Last Modified: 1/19/2020    #
+# Version: 0.10.0              #
 ###############################
 
 #openpyxl imports
@@ -302,17 +302,25 @@ class MigrateExcel:
 
     def finalPolishing(self):
         print_debug("Opening workbook: %s" % (self.owb_path))
-        owb = load_workbook(self.owb_path)
+
+        #Overwrite pointer to self.owb to allow helper functions to still work here
+        self.owb = load_workbook(self.owb_path)
 
 
         ##############################
         #    Fix Header Alignment    #
         ##############################
-        for sheetName in owb.sheetnames:
+        for sheetName in self.owb.sheetnames:
             if sheetName == "Summary":
                 continue
-            currSheet = owb[sheetName]
-            for row in currSheet.iter_rows(min_row=5, max_row=5):
+            currSheet = self.owb[sheetName]
+
+            if sheetName == "Sch D":
+                headerRow = 4
+            else:
+                headerRow = 5
+
+            for row in currSheet.iter_rows(min_row=headerRow, max_row=headerRow):
                 for cell in row:
                     cell.alignment = ALIGNMENT__HORIZONAL_CENTER
 
@@ -320,8 +328,8 @@ class MigrateExcel:
         #      Fix Column Widths     #
         ##############################
         zprint("\nFixing column widths for all sheets..")
-        for sheetName in owb.sheetnames:
-            currSheet = owb[sheetName]
+        for sheetName in self.owb.sheetnames:
+            currSheet = self.owb[sheetName]
             ##################################################
             #  Auto set width of each column based on data   #
             ##################################################
@@ -405,12 +413,24 @@ class MigrateExcel:
                 currSheet.column_dimensions["G"].width = 16
 
             if sheetName == "Sch D":
-                currSheet.column_dimensions["A"].width = COLUMN_WIDTH__ROW_TITLE_SMALL
-                currSheet.column_dimensions["B"].width = COLUMN_WIDTH__ROW_TITLE_SMALL
-                currSheet.column_dimensions["C"].width = COLUMN_WIDTH__ROW_TITLE_SMALL
-                currSheet.column_dimensions["D"].width = 15
-                currSheet.column_dimensions["E"].width = COLUMN_WIDTH__DATE
-                currSheet.column_dimensions["F"].width = 30
+                dataHeaderRow = 4
+                nameCol = self.getColNumByString(dataHeaderRow, "Name", owbSheetName=sheetName)
+                for i in range(1,nameCol):
+                    currSheet.column_dimensions["%c" % (get_column_letter(i))].width = COLUMN_WIDTH__EMPTY_ROW
+
+                #Get rest of column numbers
+                dateCol = nameCol + 1
+                memoCol = nameCol + 2
+                chkCol = nameCol + 3
+                principalCol = nameCol + 4
+                incomeCol = nameCol + 5
+
+                currSheet.column_dimensions["%c" % (get_column_letter(nameCol))].width = 18
+                currSheet.column_dimensions["%c" % (get_column_letter(dateCol))].width = COLUMN_WIDTH__DATE
+                currSheet.column_dimensions["%c" % (get_column_letter(memoCol))].width = 22
+                currSheet.column_dimensions["%c" % (get_column_letter(chkCol))].width = 6
+                currSheet.column_dimensions["%c" % (get_column_letter(principalCol))].width = 14
+                currSheet.column_dimensions["%c" % (get_column_letter(incomeCol))].width = 14
 
             if sheetName == "Sch E":
                 currSheet.column_dimensions["A"].width = COLUMN_WIDTH__ROW_TITLE_SMALL
@@ -479,14 +499,15 @@ class MigrateExcel:
                 currSheet.column_dimensions["F"].width = 10
                 currSheet.column_dimensions["G"].width = 18
                 currSheet.column_dimensions["H"].width = 18
+
         zprint("  Finished Fixing column widths for all sheets.")
 
         ##############################
         #     Check Page Width       #
         ##############################
         zprint("\nChecking page widths..")
-        for sheetName in owb.sheetnames:
-            currSheet = owb[sheetName]
+        for sheetName in self.owb.sheetnames:
+            currSheet = self.owb[sheetName]
             totalWidth = 0
             for i in range(1, currSheet.max_column+1):
                 totalWidth += currSheet.column_dimensions[get_column_letter(i)].width
@@ -501,14 +522,14 @@ class MigrateExcel:
                       "Sch D", "Sch E", "Sch F", "Sch G", "Sch H", "Sch H Detail", "Market Value", "Liability"]
 
         print_debug("\nFixing Sheet order..")
-        for i in range(0, len(owb._sheets)):
-            currentSheetName = owb._sheets[i].title
+        for i in range(0, len(self.owb._sheets)):
+            currentSheetName = self.owb._sheets[i].title
             desiredSheetName = sheetOrder[i]
             if currentSheetName != desiredSheetName:
                 #Find where desired sheet currently is and swap them
                 indexOfDesiredSheet = -1
-                for j in range(0, len(owb._sheets)):
-                    sheetName = owb._sheets[j].title
+                for j in range(0, len(self.owb._sheets)):
+                    sheetName = self.owb._sheets[j].title
                     if sheetName == desiredSheetName:
                         indexOfDesiredSheet = j
                         break
@@ -516,12 +537,12 @@ class MigrateExcel:
                 #Swap sheets if it was found
                 if indexOfDesiredSheet != -1:
                     print_debug("  Swapping sheet indexes %d <--> %d" % (i, j))
-                    owb._sheets[i], owb._sheets[j] = owb._sheets[j], owb._sheets[i]
+                    self.owb._sheets[i], self.owb._sheets[j] = self.owb._sheets[j], self.owb._sheets[i]
 
-        zprint("\nDouble Checking that all %d sheets are in order.." % (len(owb._sheets)))
+        zprint("\nDouble Checking that all %d sheets are in order.." % (len(self.owb._sheets)))
         numOutOfOrder = 0
-        for i in range(0, len(owb._sheets)):
-            currentSheetName = owb._sheets[i].title
+        for i in range(0, len(self.owb._sheets)):
+            currentSheetName = self.owb._sheets[i].title
             desiredSheetName = sheetOrder[i]
             if currentSheetName != desiredSheetName:
                 numOutOfOrder += 1
@@ -542,7 +563,7 @@ class MigrateExcel:
         zprint("\n### COMPLETED MIGRATION! ###")
         zprint("   Final output sheet: %s" % (outputFilename))
         try:
-            owb.save(filename=outputFilename)
+            self.owb.save(filename=outputFilename)
 
 
         except:
@@ -554,7 +575,6 @@ class MigrateExcel:
 
             directoryOfOutputFilename = os.path.dirname(outputFilename)
             os.startfile(directoryOfOutputFilename)
-            time.sleep(2)
 
             #Open window printing that the conversion is complete
             #window = tkinter.Tk()
@@ -1650,43 +1670,62 @@ class MigrateExcel:
         zprint("##Successfully migrated Schedule C\n")
         return 0
 
-    # Done -- Totals arent tallied (Same as Sch C, except 2 columns of totals
     def migrateSchD(self, iwbSheetName, owbSheetName):
         #Create new sheet in output workbook
         owbCurrSheet = self.owb.create_sheet(title=owbSheetName)
         #Get sheet from input workbook
         iwbCurrSheet = self.iwb[iwbSheetName]
 
-        self.migratePageTitle(iwbSheetName, owbSheetName, titleColWidth="I")
+        inputSheetDataHeaderRow = 4
+        inputNameCol = self.getColNumByString(inputSheetDataHeaderRow, "Name", iwbSheetName=iwbSheetName)
+        if inputNameCol == -1:
+            zprint("  ERROR: Unable to find \"Name\" in input sheet header row. Failed.")
+            return -1
+
+        #Dynamically assign header column width based on Name column
+        self.migratePageTitle(iwbSheetName, owbSheetName, titleColWidth="%c" % (get_column_letter(inputNameCol+5)))
 
         #Get rows to copy
-        startRow, endRow = 4, self.getRowNumByString("A", "total", iwbSheetName=iwbSheetName)
+        startRow = 4
+        endRow = self.getRowNumByString("A", "total", iwbSheetName=iwbSheetName)
         if startRow == -1 or endRow == -1:
             return -1
 
         #Copy data to new sheet
-        self.dumbCopyWithRange(iwbSheetName, owbSheetName, startRow, endRow+1)
+        self.dumbCopyWithRange(iwbSheetName, owbSheetName, startRow, endRow+1, keepFormulas=True)
 
         ##########################
         #    Manipulate Rows     #
         ##########################
-        #Insert extra row for data headers
-        owbCurrSheet.insert_rows(4)
-        dataHeaderRow = 5
+        #Dont insert extra row for this sheet to make fixing formulas easier
+        dataHeaderRow = 4
 
         ##########################
         #    Manipulate Cols     #
         ##########################
-        #Delete empty columns
+        #Find Name column
+        nameCol = self.getColNumByString(dataHeaderRow, "Name", owbSheetName=owbSheetName)
+        if nameCol == -1:
+            zprint("  ERROR: Unable to find \"Name\" column. Failed to port.")
+            return -1
+
+        #Delete empty columns after Name column
         for col in self.findEmptyCols(owbSheetName):
-            owbCurrSheet.delete_cols(col)
+            if col > nameCol:
+                owbCurrSheet.delete_cols(col)
+
+        #Find Paid Amount column
+        paidAmountCol = self.getColNumByString(dataHeaderRow, "Paid Amount", owbSheetName=owbSheetName)
+        if paidAmountCol == -1:
+            zprint("  ERROR: Unable to find \"Paid Amount\" column. Failed to port.")
+            return -1
 
         #Add Income column
-        self.writeCell(owbCurrSheet, "I%d" % (dataHeaderRow), "Income", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE)
+        self.writeCell(owbCurrSheet, "%c%d" % (get_column_letter(paidAmountCol+1), dataHeaderRow), "Income", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE)
 
-        #################################
-        #  Manipulate Cell Formatting   #
-        #################################
+        ###################################
+        #  Manipulate Header Formatting   #
+        ###################################
         #Set row of column titles to bold and underlined
         for row in owbCurrSheet.iter_rows(min_row=dataHeaderRow, max_row=dataHeaderRow):
             for cell in row:
@@ -1699,39 +1738,80 @@ class MigrateExcel:
                     cell.font = Font(bold=True)
                     cell.border = Border(bottom=Side(border_style="thick"))
 
-
+        #Update endRow location
         endRow = self.getRowNumByString("A", "total", owbSheetName=owbSheetName)
-
         if endRow == -1:
+            zprint("  ERROR: Failed to find row containing \"total\" in column A.")
             return -1
 
-        #Set cell formatting by column
+        #Find Name column
+        nameCol = self.getColNumByString(dataHeaderRow, "Name", owbSheetName=owbSheetName)
+        if nameCol == -1:
+            zprint("  ERROR: Unable to update \"Name\" column location in output sheet. Failed to port.")
+            return -1
+
+        ###################################
+        #  Set cell formatting by column  #
+        ###################################
+        nameCol = self.getColNumByString(dataHeaderRow, "Name", owbSheetName=owbSheetName)
+        dateCol = self.getColNumByString(dataHeaderRow, "Date", owbSheetName=owbSheetName)
+        memoCol = self.getColNumByString(dataHeaderRow, "Memo", owbSheetName=owbSheetName)
+        principalCol = self.getColNumByString(dataHeaderRow, "Principal", owbSheetName=owbSheetName)
+
+        if nameCol == -1 or dateCol == -1 or memoCol == -1 or principalCol == -1:
+            zprint("  ERROR: Unable to find all columns before applying formatting. Failed to port.")
+            return -1
+
         for i in range(dataHeaderRow+1, endRow+2):
-            #Bold first column
-            if owbCurrSheet["B%d" % (i)].value is not None:
-                if "total" not in owbCurrSheet["B%d" % (i)].value.lower():
-                    owbCurrSheet["B%d" % (i)].font = FONT__BOLD
+            #Bold header columns
+            for j in range(2,nameCol):
+                if owbCurrSheet["%c%d" % (get_column_letter(j),i)].value is not None:
+                    #Fix alignment of all headers
+                    owbCurrSheet["%c%d" % (get_column_letter(j), i)].alignment = None
 
-            #Bold sub column
-            if owbCurrSheet["C%d" % (i)].value is not None:
-                if "total" not in owbCurrSheet["C%d" % (i)].value.lower():
-                    owbCurrSheet["C%d" % (i)].font = FONT__BOLD
-
-            #Set date column format
-            dateCol = self.getColNumByString(dataHeaderRow, "Date", owbSheetName=owbSheetName)
-            owbCurrSheet["%c%d" % (get_column_letter(dateCol), i)].number_format = NUMBER_FORMAT__DATE
-
-            #Set Amount column format
-            amountCol = self.getColNumByString(dataHeaderRow, "Principal", owbSheetName=owbSheetName)
-            owbCurrSheet["%c%d" % (get_column_letter(amountCol), i)].number_format = NUMBER_FORMAT__ACCOUNTING
+                    #Bold all non-total headers
+                    if "total" not in owbCurrSheet["%c%d" % (get_column_letter(j),i)].value.lower():
+                        owbCurrSheet["%c%d" % (get_column_letter(j),i)].font = FONT__BOLD
 
             #Set Name column text wrap
-            nameCol = self.getColNumByString(dataHeaderRow, "Name", owbSheetName=owbSheetName)
             owbCurrSheet["%c%d" % (get_column_letter(nameCol), i)].alignment = ALIGNMENT__WRAP_TEXT
-
+            #Set date column format
+            owbCurrSheet["%c%d" % (get_column_letter(dateCol), i)].number_format = NUMBER_FORMAT__DATE
             #Set Memo column text wrap
-            memoCol = self.getColNumByString(dataHeaderRow, "Memo", owbSheetName=owbSheetName)
             owbCurrSheet["%c%d" % (get_column_letter(memoCol), i)].alignment = ALIGNMENT__WRAP_TEXT
+            #Set Amount column format
+            owbCurrSheet["%c%d" % (get_column_letter(principalCol), i)].number_format = NUMBER_FORMAT__ACCOUNTING
+
+        ##################
+        #  Fix formulas  #
+        ##################
+        inputSheetAmountCol = self.getColNumByString(inputSheetDataHeaderRow, "Paid Amount", iwbSheetName=iwbSheetName)
+        if inputSheetAmountCol == -1:
+            zprint("  ERROR: Failed to find Paid Amount column from input sheet. Cannot fix formulas.")
+            return -1
+
+        #Fix formulas for principal (formerly Paid Amount) column
+        for i in range(dataHeaderRow+1, endRow+2):
+            currentCell = owbCurrSheet["%c%d" % (get_column_letter(principalCol), i)]
+            if currentCell.value is not None and isinstance(currentCell.value, str):
+                if "=" in currentCell.value:
+                    #Prevent ROUND/SUM from being messed up by setting it to higher column letters
+                    currentCell.value = currentCell.value.replace("ROUND", "XXX1")
+                    currentCell.value = currentCell.value.replace("SUM", "YYY1")
+
+                    #Fix formula
+                    print_debug("Replacing %c with %c is formula: %s" % (get_column_letter(inputSheetAmountCol), get_column_letter(principalCol), currentCell.value))
+                    currentCell.value = currentCell.value.replace("%c" % (get_column_letter(inputSheetAmountCol)), "%c" %(get_column_letter(principalCol)))
+
+                    #Revert ROUND/SUM changes
+                    currentCell.value = currentCell.value.replace("XXX1", "ROUND")
+                    currentCell.value = currentCell.value.replace("YYY1", "SUM")
+
+                    print_debug("New formula: %s" %(currentCell.value))
+
+                    #Fix cell formatting as well
+                    currentCell.border = BORDER__BOLD_ABOVELINE
+                    currentCell.font = FONT__BOLD
 
         zprint("##Successfully migrated Schedule D\n")
         return 0
