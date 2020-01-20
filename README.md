@@ -3,12 +3,9 @@
 
 ## Usage ##
 	Open powershell window (Shift+RightClick in explorer window)
-	python.exe excelConverter.py
+	.\python.exe excelConverter.py
 
 ## Known limitations ##
-- Sch D
-	- ## Migration isnt working at all ##
-
 - Sch G
 	- ## Completely unsuported as of right now ##
 
@@ -24,6 +21,10 @@
 	
 - Sch A
 	- Income vs Principle not separated
+
+- Sch D
+	- Add extra row on line 4 between title and headers
+	- Add principal data
 
 - Sch H
 	- Formulas arent complete
