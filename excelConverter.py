@@ -1,7 +1,7 @@
 ###############################
 # Author: Will Miller         #
-# Last Modified: 1/19/2020    #
-# Version: 0.10.0              #
+# Last Modified: 2/13/2020    #
+# Version: 0.11               #
 ###############################
 
 #openpyxl imports
@@ -398,11 +398,21 @@ class MigrateExcel:
 
             if sheetName == "Sch B":
                 currSheet.column_dimensions["A"].width = COLUMN_WIDTH__ROW_TITLE_SMALL
-                currSheet.column_dimensions["B"].width = 10
-                currSheet.column_dimensions["C"].width = 32
-                currSheet.column_dimensions["D"].width = 15
-                currSheet.column_dimensions["E"].width = 15
-                currSheet.column_dimensions["F"].width = 15
+                currSheet.column_dimensions["B"].width = COLUMN_WIDTH__DATE
+                currSheet.column_dimensions["C"].width = 10
+                currSheet.column_dimensions["D"].width = 23
+                currSheet.column_dimensions["E"].width = 14
+                currSheet.column_dimensions["F"].width = 14
+                currSheet.column_dimensions["G"].width = 14
+
+            if sheetName == "Sch E":
+                currSheet.column_dimensions["A"].width = COLUMN_WIDTH__ROW_TITLE_SMALL
+                currSheet.column_dimensions["B"].width = COLUMN_WIDTH__DATE
+                currSheet.column_dimensions["C"].width = 10
+                currSheet.column_dimensions["D"].width = 23
+                currSheet.column_dimensions["E"].width = 14
+                currSheet.column_dimensions["F"].width = 14
+                currSheet.column_dimensions["G"].width = 14
 
             if sheetName == "Sch C":
                 currSheet.column_dimensions["A"].width = COLUMN_WIDTH__ROW_TITLE_SMALL
@@ -431,14 +441,6 @@ class MigrateExcel:
                 currSheet.column_dimensions["%c" % (get_column_letter(chkCol))].width = 6
                 currSheet.column_dimensions["%c" % (get_column_letter(principalCol))].width = 14
                 currSheet.column_dimensions["%c" % (get_column_letter(incomeCol))].width = 14
-
-            if sheetName == "Sch E":
-                currSheet.column_dimensions["A"].width = COLUMN_WIDTH__ROW_TITLE_SMALL
-                currSheet.column_dimensions["B"].width = 10
-                currSheet.column_dimensions["C"].width = 32
-                currSheet.column_dimensions["D"].width = 15
-                currSheet.column_dimensions["E"].width = 15
-                currSheet.column_dimensions["F"].width = 15
 
             if sheetName == "Sch F":
                 currSheet.column_dimensions["A"].width = COLUMN_WIDTH__ROW_TITLE_SMALL
@@ -1254,6 +1256,8 @@ class MigrateExcel:
         owbCurrSheet["%s%d" % (formulasColLetter, finalTotalRowFromSubTotals)].border = BORDER__BOLD_ABOVELINE
         owbCurrSheet["%s%d" % (formulasColLetter, finalTotalRowFromSubTotals)].font = FONT__NORMAL
 
+        #Add TOTAL PRINCIPAL AND INCOME after total
+        self.writeCell(owbCurrSheet, "A%d" % (finalTotalRowNum+1), "TOTAL PRINCIPAL AND INCOME", font=FONT__BOLD)
 
         zprint("##Successfully migrated Schedule A\n")
         return 0
@@ -1265,7 +1269,7 @@ class MigrateExcel:
         #Get sheet from input workbook
         iwbCurrSheet = self.iwb[iwbSheetName]
 
-        self.migratePageTitle(iwbSheetName, owbSheetName, titleColWidth="F")
+        self.migratePageTitle(iwbSheetName, owbSheetName, titleColWidth="G")
         owbCurrSheet["A2"].value = "Schedule B - Gains on Sales or Other Dispositions"
 
         ##########################
@@ -1275,22 +1279,24 @@ class MigrateExcel:
         owbCurrSheet.insert_rows(4)
         dataHeaderRow = 5
 
-        self.writeCell(owbCurrSheet, "B%d" % (dataHeaderRow), "Qty", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE, alignment=ALIGNMENT__HORIZONAL_CENTER)
-        self.writeCell(owbCurrSheet, "C%d" % (dataHeaderRow), "Investment", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE, alignment=ALIGNMENT__HORIZONAL_CENTER)
-        self.writeCell(owbCurrSheet, "D%d" % (dataHeaderRow), "Proceeds", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE, alignment=ALIGNMENT__HORIZONAL_CENTER)
-        self.writeCell(owbCurrSheet, "E%d" % (dataHeaderRow), "Carrying Value", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE, alignment=ALIGNMENT__HORIZONAL_CENTER)
-        self.writeCell(owbCurrSheet, "F%d" % (dataHeaderRow), "Gain", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE, alignment=ALIGNMENT__HORIZONAL_CENTER)
+        self.writeCell(owbCurrSheet, "B%d" % (dataHeaderRow), "Date", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE, alignment=ALIGNMENT__HORIZONAL_CENTER)
+        self.writeCell(owbCurrSheet, "C%d" % (dataHeaderRow), "Qty", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE, alignment=ALIGNMENT__HORIZONAL_CENTER)
+        self.writeCell(owbCurrSheet, "D%d" % (dataHeaderRow), "Investment", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE, alignment=ALIGNMENT__HORIZONAL_CENTER)
+        self.writeCell(owbCurrSheet, "E%d" % (dataHeaderRow), "Proceeds", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE, alignment=ALIGNMENT__HORIZONAL_CENTER)
+        self.writeCell(owbCurrSheet, "F%d" % (dataHeaderRow), "Carrying Value", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE, alignment=ALIGNMENT__HORIZONAL_CENTER)
+        self.writeCell(owbCurrSheet, "G%d" % (dataHeaderRow), "Gain", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE, alignment=ALIGNMENT__HORIZONAL_CENTER)
 
         ##########################
         #    Get IWB Columns     #
         ##########################
         #Get input WB columns for data
+        dateColNum = self.getColNumByString(4, "Date", iwbSheetName=iwbSheetName)
         qtyColNum = self.getColNumByString(4, "Qty", iwbSheetName=iwbSheetName)
         itemColNum = self.getColNumByString(4, "Item", iwbSheetName=iwbSheetName)
         debitColNum = self.getColNumByString(4, "Debit", iwbSheetName=iwbSheetName)
         creditColNum = self.getColNumByString(4, "Credit", iwbSheetName=iwbSheetName)
 
-        if qtyColNum == -1 or itemColNum == -1 or debitColNum == -1 or creditColNum == -1:
+        if dateColNum == -1 or qtyColNum == -1 or itemColNum == -1 or debitColNum == -1 or creditColNum == -1:
             zprint("  ERROR: Failed to get columns for Qty/Item/Debit/Credit from input workbook.")
             return -1
 
@@ -1308,6 +1314,7 @@ class MigrateExcel:
             itemRowOne = iwbCurrSheet["%s%d" % (get_column_letter(itemColNum), currIWBRow)].value
             itemRowTwo = iwbCurrSheet["%s%d" % (get_column_letter(itemColNum), currIWBRow+1)].value
             qtyValue = iwbCurrSheet["%s%d" % (get_column_letter(qtyColNum), currIWBRow)].value
+            dateValue = iwbCurrSheet["%s%d" % (get_column_letter(dateColNum), currIWBRow)].value
 
             #Make sure the two rows are for the same item
             if itemRowOne != itemRowTwo:
@@ -1334,11 +1341,12 @@ class MigrateExcel:
                 print_debug("  Found Gain on rows %d and %d: %s" % (currIWBRow, currIWBRow+1, itemRowOne))
 
                 #Write values to output workbook
-                self.writeCell(owbCurrSheet, "B%d" % (currentOWBRow), qtyValue)
-                self.writeCell(owbCurrSheet, "C%d" % (currentOWBRow), itemRowOne)
-                self.writeCell(owbCurrSheet, "D%d" % (currentOWBRow), creditValue)
-                self.writeCell(owbCurrSheet, "E%d" % (currentOWBRow), debitValue)
-                self.writeCell(owbCurrSheet, "F%d" % (currentOWBRow), creditValue-debitValue)
+                self.writeCell(owbCurrSheet, "B%d" % (currentOWBRow), dateValue)
+                self.writeCell(owbCurrSheet, "C%d" % (currentOWBRow), qtyValue)
+                self.writeCell(owbCurrSheet, "D%d" % (currentOWBRow), itemRowOne)
+                self.writeCell(owbCurrSheet, "E%d" % (currentOWBRow), creditValue)
+                self.writeCell(owbCurrSheet, "F%d" % (currentOWBRow), debitValue)
+                self.writeCell(owbCurrSheet, "G%d" % (currentOWBRow), creditValue-debitValue)
 
                 currentOWBRow += 1
             else: #loss
@@ -1360,22 +1368,25 @@ class MigrateExcel:
         #Set cell formatting by column
         for i in range(dataHeaderRow+1, endRow+2):
             #Set date column format
-            owbCurrSheet["B%d" % (i)].number_format = NUMBER_FORMAT__STANDARD
+            owbCurrSheet["B%d" % (i)].number_format = NUMBER_FORMAT__DATE
+            owbCurrSheet["C%d" % (i)].number_format = NUMBER_FORMAT__STANDARD
+
+            owbCurrSheet["D%d" % (i)].alignment = ALIGNMENT__WRAP_TEXT
 
             #Set currency formats
-            owbCurrSheet["D%d" % (i)].number_format = NUMBER_FORMAT__ACCOUNTING
             owbCurrSheet["E%d" % (i)].number_format = NUMBER_FORMAT__ACCOUNTING
             owbCurrSheet["F%d" % (i)].number_format = NUMBER_FORMAT__ACCOUNTING
+            owbCurrSheet["G%d" % (i)].number_format = NUMBER_FORMAT__ACCOUNTING
 
 
         #######################
         #   Generate Totals   #
         #######################
-        for colLetter in ["D", "E", "F"]:
+        for colLetter in ["E", "F", "G"]:
             self.writeCell(owbCurrSheet, "%s%d" % (colLetter, endRow-1), "=ROUND(SUM(%s%d:%s%d),5)"
                            % (colLetter, dataHeaderRow+1, colLetter, endRow-2), border=BORDER__BOLD_ABOVELINE, font=FONT__BOLD)
 
-        self.writeCell(owbCurrSheet, "F%d" % (endRow), "=F%d" % (endRow-1), border=BORDER__FINAL_SUM, font=FONT__BOLD)
+        self.writeCell(owbCurrSheet, "G%d" % (endRow), "=G%d" % (endRow-1), border=BORDER__FINAL_SUM, font=FONT__BOLD)
 
 
         zprint("##Successfully migrated Schedule B\n")
@@ -1388,7 +1399,7 @@ class MigrateExcel:
         #Get sheet from input workbook
         iwbCurrSheet = self.iwb[iwbSheetName]
 
-        self.migratePageTitle(iwbSheetName, owbSheetName, titleColWidth="F")
+        self.migratePageTitle(iwbSheetName, owbSheetName, titleColWidth="G")
         owbCurrSheet["A2"].value = "Schedule E - Losses on Sales or Other Dispositions"
 
         ##########################
@@ -1398,23 +1409,25 @@ class MigrateExcel:
         owbCurrSheet.insert_rows(4)
         dataHeaderRow = 5
 
-        self.writeCell(owbCurrSheet, "B%d" % (dataHeaderRow), "Qty", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE, alignment=ALIGNMENT__HORIZONAL_CENTER)
-        self.writeCell(owbCurrSheet, "C%d" % (dataHeaderRow), "Investment", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE, alignment=ALIGNMENT__HORIZONAL_CENTER)
-        self.writeCell(owbCurrSheet, "D%d" % (dataHeaderRow), "Proceeds", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE, alignment=ALIGNMENT__HORIZONAL_CENTER)
-        self.writeCell(owbCurrSheet, "E%d" % (dataHeaderRow), "Carrying Value", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE, alignment=ALIGNMENT__HORIZONAL_CENTER)
-        self.writeCell(owbCurrSheet, "F%d" % (dataHeaderRow), "Loss", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE, alignment=ALIGNMENT__HORIZONAL_CENTER)
+        self.writeCell(owbCurrSheet, "B%d" % (dataHeaderRow), "Date", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE, alignment=ALIGNMENT__HORIZONAL_CENTER)
+        self.writeCell(owbCurrSheet, "C%d" % (dataHeaderRow), "Qty", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE, alignment=ALIGNMENT__HORIZONAL_CENTER)
+        self.writeCell(owbCurrSheet, "D%d" % (dataHeaderRow), "Investment", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE, alignment=ALIGNMENT__HORIZONAL_CENTER)
+        self.writeCell(owbCurrSheet, "E%d" % (dataHeaderRow), "Proceeds", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE, alignment=ALIGNMENT__HORIZONAL_CENTER)
+        self.writeCell(owbCurrSheet, "F%d" % (dataHeaderRow), "Carrying Value", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE, alignment=ALIGNMENT__HORIZONAL_CENTER)
+        self.writeCell(owbCurrSheet, "G%d" % (dataHeaderRow), "Loss", font=FONT__BOLD, border=BORDER__BOLD_UNDERLINE, alignment=ALIGNMENT__HORIZONAL_CENTER)
 
         ##########################
         #    Get IWB Columns     #
         ##########################
         #Get input WB columns for data
+        dateColNum = self.getColNumByString(4, "Date", iwbSheetName=iwbSheetName)
         qtyColNum = self.getColNumByString(4, "Qty", iwbSheetName=iwbSheetName)
         itemColNum = self.getColNumByString(4, "Item", iwbSheetName=iwbSheetName)
         debitColNum = self.getColNumByString(4, "Debit", iwbSheetName=iwbSheetName)
         creditColNum = self.getColNumByString(4, "Credit", iwbSheetName=iwbSheetName)
 
-        if qtyColNum == -1 or itemColNum == -1 or debitColNum == -1 or creditColNum == -1:
-            zprint("  ERROR: Failed to get columns for Qty/Item/Debit/Credit from input workbook.")
+        if dateColNum == -1 or qtyColNum == -1 or itemColNum == -1 or debitColNum == -1 or creditColNum == -1:
+            zprint("  ERROR: Failed to get columns for Date/Qty/Item/Debit/Credit from input workbook.")
             return -1
 
         ######################################
@@ -1431,6 +1444,7 @@ class MigrateExcel:
             itemRowOne = iwbCurrSheet["%s%d" % (get_column_letter(itemColNum), currIWBRow)].value
             itemRowTwo = iwbCurrSheet["%s%d" % (get_column_letter(itemColNum), currIWBRow+1)].value
             qtyValue = iwbCurrSheet["%s%d" % (get_column_letter(qtyColNum), currIWBRow)].value
+            dateValue = iwbCurrSheet["%s%d" % (get_column_letter(dateColNum), currIWBRow)].value
 
             #Make sure the two rows are for the same item
             if itemRowOne != itemRowTwo:
@@ -1458,11 +1472,12 @@ class MigrateExcel:
             else: #loss
                 print_debug("  Found loss on rows %d and %d: %s" % (currIWBRow, currIWBRow+1, itemRowOne))
                 #Write values to output workbook
-                self.writeCell(owbCurrSheet, "B%d" % (currentOWBRow), qtyValue)
-                self.writeCell(owbCurrSheet, "C%d" % (currentOWBRow), itemRowOne)
-                self.writeCell(owbCurrSheet, "D%d" % (currentOWBRow), creditValue)
-                self.writeCell(owbCurrSheet, "E%d" % (currentOWBRow), debitValue)
-                self.writeCell(owbCurrSheet, "F%d" % (currentOWBRow), creditValue-debitValue)
+                self.writeCell(owbCurrSheet, "B%d" % (currentOWBRow), dateValue)
+                self.writeCell(owbCurrSheet, "C%d" % (currentOWBRow), qtyValue)
+                self.writeCell(owbCurrSheet, "D%d" % (currentOWBRow), itemRowOne)
+                self.writeCell(owbCurrSheet, "E%d" % (currentOWBRow), creditValue)
+                self.writeCell(owbCurrSheet, "F%d" % (currentOWBRow), debitValue)
+                self.writeCell(owbCurrSheet, "G%d" % (currentOWBRow), creditValue-debitValue)
                 currentOWBRow += 1
 
             #Increment by two becuase input workbook has 2 lines per item
@@ -1480,22 +1495,25 @@ class MigrateExcel:
         #Set cell formatting by column
         for i in range(dataHeaderRow+1, endRow+2):
             #Set date column format
-            owbCurrSheet["B%d" % (i)].number_format = NUMBER_FORMAT__STANDARD
+            owbCurrSheet["B%d" % (i)].number_format = NUMBER_FORMAT__DATE
+            owbCurrSheet["C%d" % (i)].number_format = NUMBER_FORMAT__STANDARD
+
+            owbCurrSheet["D%d" % (i)].alignment = ALIGNMENT__WRAP_TEXT
 
             #Set currency formats
-            owbCurrSheet["D%d" % (i)].number_format = NUMBER_FORMAT__ACCOUNTING
             owbCurrSheet["E%d" % (i)].number_format = NUMBER_FORMAT__ACCOUNTING
             owbCurrSheet["F%d" % (i)].number_format = NUMBER_FORMAT__ACCOUNTING
+            owbCurrSheet["G%d" % (i)].number_format = NUMBER_FORMAT__ACCOUNTING
 
 
         #######################
         #   Generate Totals   #
         #######################
-        for colLetter in ["D", "E", "F"]:
+        for colLetter in ["E", "F", "G"]:
             self.writeCell(owbCurrSheet, "%s%d" % (colLetter, endRow-1), "=ROUND(SUM(%s%d:%s%d),5)"
                            % (colLetter, dataHeaderRow+1, colLetter, endRow-2), border=BORDER__BOLD_ABOVELINE, font=FONT__BOLD)
 
-        self.writeCell(owbCurrSheet, "F%d" % (endRow), "=F%d" % (endRow-1), border=BORDER__FINAL_SUM, font=FONT__BOLD)
+        self.writeCell(owbCurrSheet, "G%d" % (endRow), "=G%d" % (endRow-1), border=BORDER__FINAL_SUM, font=FONT__BOLD)
 
 
         zprint("##Successfully migrated Schedule E\n")
@@ -1697,7 +1715,7 @@ class MigrateExcel:
         ##########################
         #    Manipulate Rows     #
         ##########################
-        #Dont insert extra row for this sheet to make fixing formulas easier
+        #NOTE: Dont insert extra row for this sheet to make fixing formulas easier
         dataHeaderRow = 4
 
         ##########################
@@ -1744,11 +1762,8 @@ class MigrateExcel:
             zprint("  ERROR: Failed to find row containing \"total\" in column A.")
             return -1
 
-        #Find Name column
-        nameCol = self.getColNumByString(dataHeaderRow, "Name", owbSheetName=owbSheetName)
-        if nameCol == -1:
-            zprint("  ERROR: Unable to update \"Name\" column location in output sheet. Failed to port.")
-            return -1
+        #Add TOTAL PRINCIPAL AND INCOME after total
+        self.writeCell(owbCurrSheet, "A%d" % (endRow+1), "TOTAL PRINCIPAL AND INCOME", font=FONT__BOLD)
 
         ###################################
         #  Set cell formatting by column  #
@@ -1759,7 +1774,7 @@ class MigrateExcel:
         principalCol = self.getColNumByString(dataHeaderRow, "Principal", owbSheetName=owbSheetName)
 
         if nameCol == -1 or dateCol == -1 or memoCol == -1 or principalCol == -1:
-            zprint("  ERROR: Unable to find all columns before applying formatting. Failed to port.")
+            zprint("  ERROR: Unable to find all columns (Name, Date, Memo, Principal) before applying formatting. Failed to port.")
             return -1
 
         for i in range(dataHeaderRow+1, endRow+2):
@@ -2295,8 +2310,19 @@ class MigrateExcel:
         #Custom second line title for this page
         title2 = "Account Summary"
 
-        #TODO: Fix how date is created here
+        #Get current year of this data
         date = iwbCurrSheet['A3'].value
+        year = date.split()[-1]
+
+        #Try and extract what year this came from
+        try:
+            year = int(year)
+            if year > 2000 or year < 2100:
+                date = "January %d through December %d" % (year-1, year)
+        except:
+            print("  WARNING: Unable to detect date range for summary page.")
+
+
 
         #Merge first %c columns of first three rows
         titleColWidth = 'D'
